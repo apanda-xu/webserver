@@ -74,28 +74,50 @@
 //     }
 // }
 
-#include<iostream>
-#include<string>
-#include<string.h>
-using namespace std;
+// #include<iostream>
+// #include<string>
+// #include<string.h>
+// using namespace std;
+
+// int main() {
+//     char name[] = "a1', 'a1'), ('a2', 'a2'), ('a3";
+//     char password[] = "a3";
+//     char *sql_insert = (char *)malloc(sizeof(char) * 200);
+//     strcpy(sql_insert, "INSERT INTO user(username, passwd) VALUES(");
+//     strcat(sql_insert, "'");
+//     strcat(sql_insert, name);
+//     strcat(sql_insert, "', '");
+//     strcat(sql_insert, password);
+//     strcat(sql_insert, "')");
+
+//     cout << sql_insert << endl;
+
+//     // ('a1', 'a1'), ('a2', 'a2'), ('a3', 'a3')
+
+//     // char name[] = "xujie";
+//     // name[0] = 'l';
+//     // cout << name << endl;
+//     // cout << strlen(name);
+// }
+
+
+#include <iostream>
+#include <exception>
 
 int main() {
-    char name[] = "a1', 'a1'), ('a2', 'a2'), ('a3";
-    char password[] = "a3";
-    char *sql_insert = (char *)malloc(sizeof(char) * 200);
-    strcpy(sql_insert, "INSERT INTO user(username, passwd) VALUES(");
-    strcat(sql_insert, "'");
-    strcat(sql_insert, name);
-    strcat(sql_insert, "', '");
-    strcat(sql_insert, password);
-    strcat(sql_insert, "')");
+    try {
+        int a, b;
+        std::cout << "Enter two numbers: ";
+        std::cin >> a >> b;
 
-    cout << sql_insert << endl;
+        if (b == 0) {
+            throw std::runtime_error("Divide by zero error");
+        }
 
-    // ('a1', 'a1'), ('a2', 'a2'), ('a3', 'a3')
+        std::cout << "Result: " << a / b << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 
-    // char name[] = "xujie";
-    // name[0] = 'l';
-    // cout << name << endl;
-    // cout << strlen(name);
+    return 0;
 }
