@@ -86,18 +86,20 @@ private:
 class cond
 {
 public:
+    // 构造函数：初始化条件变量
     cond()
     {
         if (pthread_cond_init(&m_cond, NULL) != 0)
         {
-            //pthread_mutex_destroy(&m_mutex);
             throw std::exception();
         }
     }
+    // 析构函数：销毁条件变量
     ~cond()
     {
         pthread_cond_destroy(&m_cond);
     }
+    // 成员函数：等待条件变量满足，该函数在等待条件变量期间会释放互斥锁，并在条件变量满足时重新获得互斥锁
     bool wait(pthread_mutex_t *m_mutex)
     {
         int ret = 0;
@@ -106,6 +108,7 @@ public:
         //pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
+    // 成员函数：在指定时间内等待条件变量满足
     bool timewait(pthread_mutex_t *m_mutex, struct timespec t)
     {
         int ret = 0;
@@ -114,10 +117,12 @@ public:
         //pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
+    // 成员函数：发送信号唤醒一个正在等待条件变量的线程
     bool signal()
     {
         return pthread_cond_signal(&m_cond) == 0;
     }
+    // 成员函数：发送广播唤醒所有正在等待条件变量的线程
     bool broadcast()
     {
         return pthread_cond_broadcast(&m_cond) == 0;
