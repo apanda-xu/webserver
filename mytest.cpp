@@ -517,3 +517,85 @@
 //     vector<int> res = topKFrequent(nums, k);
 //     cout << res[0] << endl;
 // }
+
+// #include<iostream>
+// #include<exception>
+
+// int main() {
+//     int a = 1;
+//     if(a == 1) {
+//         throw std::exception();
+//     }
+// }
+
+// #include <pthread.h>
+// #include <iostream>
+
+// // 线程函数
+// void *thread_func(void *arg) {
+//     int thread_id = *(int *)arg;
+//     std::cout << "hello from thread " << thread_id << std::endl;
+//     return NULL;
+// }
+
+// int main() {
+//     pthread_t thread_id;
+//     int thread_arg = 1;
+    
+//     // 创建线程
+//     int result = pthread_create(&thread_id, NULL, thread_func, &thread_arg);
+//     if (result != 0) {
+//         std::cout << "failed to create thread" << std::endl;
+//         return 1;
+//     }
+
+//     // 等待线程结束
+//     result = pthread_join(thread_id, NULL);
+//     if (result != 0) {
+//         std::cout << "failed to join thread" << std::endl; 
+//         return 1;
+//     }
+//     std::cout << "thread joined" << std::endl; 
+//     return 0;
+// }
+
+#include <iostream>
+#include <pthread.h>
+
+// 线程函数，打印消息
+void* printMessage(void* arg) {
+    std::string message = static_cast<char*>(arg);
+    std::cout << "Thread ID: " << pthread_self() << " Message: " << message << std::endl;
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t thread1, thread2;
+    const char* message1 = "Hello from Thread 1";
+    const char* message2 = "Hello from Thread 2";
+
+    // 创建线程1，并执行线程函数printMessage
+    if (pthread_create(&thread1, NULL, printMessage, (void*)message1) != 0) {
+        std::cerr << "Failed to create thread 1" << std::endl;
+        return 1;
+    }
+
+    // 创建线程2，并执行线程函数printMessage
+    if (pthread_create(&thread2, NULL, printMessage, (void*)message2) != 0) {
+        std::cerr << "Failed to create thread 2" << std::endl;
+        return 1;
+    }
+
+    // 等待线程1和线程2执行完成
+    if (pthread_join(thread1, NULL) != 0) {
+        std::cerr << "Failed to join thread 1" << std::endl;
+        return 1;
+    }
+
+    if (pthread_join(thread2, NULL) != 0) {
+        std::cerr << "Failed to join thread 2" << std::endl;
+        return 1;
+    }
+
+    return 0;
+}

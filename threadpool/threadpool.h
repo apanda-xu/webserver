@@ -33,6 +33,8 @@ private:
     connection_pool *m_connPool;  //数据库
     int m_actor_model;          //模型切换
 };
+
+// 构造函数
 template <typename T>
 threadpool<T>::threadpool( int actor_model, connection_pool *connPool, int thread_number, int max_requests) : m_actor_model(actor_model),m_thread_number(thread_number), m_max_requests(max_requests), m_threads(NULL),m_connPool(connPool)
 {
@@ -55,11 +57,13 @@ threadpool<T>::threadpool( int actor_model, connection_pool *connPool, int threa
         }
     }
 }
+
 template <typename T>
 threadpool<T>::~threadpool()
 {
     delete[] m_threads;
 }
+
 template <typename T>
 bool threadpool<T>::append(T *request, int state)
 {
@@ -75,6 +79,7 @@ bool threadpool<T>::append(T *request, int state)
     m_queuestat.post();
     return true;
 }
+
 template <typename T>
 bool threadpool<T>::append_p(T *request)
 {
@@ -89,6 +94,7 @@ bool threadpool<T>::append_p(T *request)
     m_queuestat.post();
     return true;
 }
+
 template <typename T>
 void *threadpool<T>::worker(void *arg)
 {
@@ -96,6 +102,7 @@ void *threadpool<T>::worker(void *arg)
     pool->run();
     return pool;
 }
+
 template <typename T>
 void threadpool<T>::run()
 {
