@@ -29,7 +29,6 @@
 // locker lock;
 // std::mutex mt;
 
-
 // void show(std::string s) {
 //     // lock.lock();
 //     std::unique_lock<std::mutex> unique(mt);
@@ -46,7 +45,6 @@
 //     t2.detach();
 //     std::this_thread::sleep_for(std::chrono::seconds(5));
 // }
-
 
 // #include<iostream>
 // #include<unistd.h>
@@ -100,7 +98,6 @@
 //     // cout << strlen(name);
 // }
 
-
 // #include <iostream>
 // #include <exception>
 
@@ -116,7 +113,7 @@
 
 //         std::cout << "Result: " << a / b << std::endl;
 //     } catch (const std::exception& e) {
-//         std::cerr << "Error: " << e.what() << std::endl;
+//         std::cout << "Error: " << e.what() << std::endl;
 //     }
 
 //     return 0;
@@ -212,8 +209,7 @@
 
 //     pthread_create(&thread, NULL, thread_func, &thread_id);
 
-    
-//     std::this_thread::sleep_for(std::chrono::seconds(2)); 
+//     std::this_thread::sleep_for(std::chrono::seconds(2));
 // }
 
 // #include<iostream>
@@ -274,7 +270,6 @@
 //     return 0;
 // }
 
-
 // #include <iostream>
 // #include <thread>
 // #include <mutex>
@@ -284,7 +279,7 @@
 // void printMessage(const std::string& message)
 // {
 //     // 上锁互斥锁
-//     std::unique_lock<std::mutex> lock(mtx);  
+//     std::unique_lock<std::mutex> lock(mtx);
 //     // 执行临界区操作
 //     std::cout << message << std::endl;
 //     std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -300,44 +295,225 @@
 //     return 0;
 // }
 
+// #include <iostream>
+// #include <thread>
+// #include <mutex>
+// #include <condition_variable>
 
-#include <iostream>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+// std::mutex mtx;
+// std::condition_variable cv;
+// bool ready = false;
 
-std::mutex mtx;
-std::condition_variable cv;
-bool ready = false;
+// void waitingThread()
+// {
+//     std::unique_lock<std::mutex> lock(mtx);
+//     while (!ready) {
+//         std::cout << "Waiting thread: Condition is not met!" << std::endl;
+//         cv.wait(lock);  // 等待条件变量，同时释放互斥锁
+//     }
+//     std::cout << "Waiting thread: Condition is met!" << std::endl;
+// }
 
-void waitingThread()
-{
-    std::unique_lock<std::mutex> lock(mtx);
-    while (!ready) {
-        std::cout << "Waiting thread: Condition is not met!" << std::endl;
-        cv.wait(lock);  // 等待条件变量，同时释放互斥锁
-    }
-    std::cout << "Waiting thread: Condition is met!" << std::endl;
-}
+// void notifyingThread()
+// {
+//     std::this_thread::sleep_for(std::chrono::seconds(2));
+//     std::unique_lock<std::mutex> lock(mtx);
+//     ready = true;
+//     cv.notify_one();  // 通知等待的线程条件变量已满足
+// }
 
-void notifyingThread()
-{
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    std::unique_lock<std::mutex> lock(mtx);
-    ready = true;
-    cv.notify_one();  // 通知等待的线程条件变量已满足
-}
+// int main()
+// {
+//     std::thread t1(waitingThread);
+//     std::thread t2(notifyingThread);
 
-int main()
-{
-    std::thread t1(waitingThread);
-    std::thread t2(notifyingThread);
+//     t1.join();
+//     t2.join();
 
-    t1.join();
-    t2.join();
+//     return 0;
+// }
 
-    return 0;
-}
+// #include <iostream>
+// #include <thread>
+// #include <mutex>
 
+// std::mutex mtx;
+// int shareddata = 0;
 
+// void updateShareddata()
+// {
+//     std::lock_guard<std::mutex> lock(mtx);  // 上锁互斥锁
+//     // 执行临界区域的代码
+//     ++shareddata;
+//     std::cout << "Updated shared data: " << shareddata << std::endl;
+//     // lock 销毁时会自动解锁互斥锁
+// }
 
+// int main()
+// {
+//     std::thread t1(updateShareddata);
+//     std::thread t2(updateShareddata);
+
+//     t1.join();
+//     t2.join();
+
+//     return 0;
+// }
+
+// #include <iostream>
+// #include <thread>
+// #include <condition_variable>
+
+// std::mutex mtx;
+// std::condition_variable cv;
+// bool ready = false;
+
+// void worker()
+// {
+//     std::unique_lock<std::mutex> lock(mtx);
+//     std::cout << "Worker: Waiting for signal..." << std::endl;
+//     cv.wait(lock, [] { return ready; });  // 等待条件变量满足。唤醒时会对ready进行检查，当ready为false时，继续阻塞，防止虚假唤醒。
+//     std::cout << "Worker: Got the signal!" << std::endl;
+// }
+
+// void setter()
+// {
+//     std::this_thread::sleep_for(std::chrono::seconds(2));  // 模拟耗时操作
+//     {
+//         std::lock_guard<std::mutex> lock(mtx);
+//         ready = true;  // 设置条件变量为满足状态
+//         cv.notify_one();  // 发送信号通知等待的线程
+//     }
+// }
+
+// int main()
+// {
+//     std::thread t1(worker);
+//     std::thread t2(setter);
+
+//     t1.join();
+//     t2.join();
+
+//     return 0;
+// }
+
+// #include <mysql/mysql.h>
+// #include <iostream>
+// #include <string>
+
+// // 3. 查询数据
+// void select(MYSQL *conn) {
+//     if (mysql_query(conn, "select * from user") != 0) {
+//         std::cout << "failed to fetch data: " << mysql_error(conn) << std::endl;
+//     } else {
+//         MYSQL_RES *result = mysql_store_result(conn);
+//         if (result == NULL) {
+//             std::cout << "failed to get result set: " << mysql_error(conn) << std::endl;
+//         } else {
+//             MYSQL_ROW row;
+//             std::cout << "name\tpasswd" << std::endl;
+//             while ((row = mysql_fetch_row(result)) != NULL) {
+//                 std::cout << row[0] << "\t" << row[1] << std::endl;
+//             }
+//             mysql_free_result(result);
+//         }
+//     }
+// }
+
+// int main() {
+//     std::string localhost = "127.0.0.1";
+//     std::string username  = "root";
+//     std::string password  = "258088";
+//     std::string database = "yourdb";
+
+//     // 1. 初始化
+//     MYSQL *conn = mysql_init(NULL);
+//     if (conn == NULL) {
+//         std::cout << "failed to initialize" << std::endl;
+//         return 1;
+//     }
+
+//     // 2. 连接数据库
+//     if (mysql_real_connect(conn, localhost.c_str(), username.c_str(), password.c_str(), database.c_str(), 0, NULL, 0) == NULL) {
+//         std::cout << "failed to connect: " << mysql_error(conn) << std::endl;
+//         mysql_close(conn);
+//         return 1;
+//     }
+
+//     // 3. 查询数据
+//     select(conn);
+
+//     // 4. 插入数据
+//     if (mysql_query(conn, "insert into user (username, passwd) values ('test1', '20')") != 0) {
+//         std::cout << "failed to insert data: " << mysql_error(conn) << std::endl;
+//     } else {
+//         std::cout << "inserted successfully" << std::endl;
+//     }
+
+//     select(conn);
+
+//     // 5. 更新数据
+//     if (mysql_query(conn, "update user set passwd = '123456' where username = 'test1'") != 0) {
+//         std::cout << "failed to update data: " << mysql_error(conn) << std::endl;
+//     } else {
+//         std::cout << "updated successfully" << std::endl;
+//     }
+
+//     select(conn);
+
+//     // 6. 删除数据
+//     if (mysql_query(conn, "delete from user where username = 'test1'") != 0) {
+//         std::cout << "failed to delete data: " << mysql_error(conn) << std::endl;
+//     } else {
+//         std::cout << "data deleted successfully" << std::endl;
+//     }
+
+//     select(conn);
+
+//     // 7. 关闭连接
+//     mysql_close(conn);
+//     return 0;
+// }
+
+// #include <iostream>
+// #include <vector>
+// #include <map>
+// using namespace std;
+
+// // {3,0,1,0}
+// // 1
+// vector<int> topKFrequent(vector<int> &nums, int k) {
+//     map<int, int> mp;
+//     vector<int> res;
+//     for (int i = 0; i < nums.size(); i++)
+//     {
+//         mp[nums[i]]++;
+//     }
+//     // {3:1
+//     // 0:2
+//     // 1:1}
+//     for (int i = 0; i < k; i++)
+//     {
+//         int key = 0, value = 0;
+//         for (auto it : mp)
+//         {
+//             cout << "it.first" << it.first << " it.second" << it.second << endl;
+//             if (it.second >= value)
+//             {
+//                 key = it.first;
+//                 value = it.second;
+//             }
+//             cout << "key=" << key << " value=" << value << endl;
+//         }
+//         res.push_back(key);
+//         mp[key] = -1;
+//     }
+//     return res;
+// }
+
+// int main() {
+//     vector<int> nums = {3,0,1,0};
+//     int k = 1;
+//     vector<int> res = topKFrequent(nums, k);
+//     cout << res[0] << endl;
+// }
