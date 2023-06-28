@@ -118,34 +118,40 @@ void threadpool<T>::run()
 {
     while (true)
     {
-        m_queuestat.wait();
-        m_queuelocker.lock();
-        if (m_workqueue.empty())
+        m_queuestat.wait();      // 请求数减一，如果没有请求，线程会被阻塞在这里
+        m_queuelocker.lock();    // 操作请求队列前加锁
+        if (m_workqueue.empty()) // 若请求队列为空，释放锁
         {
             m_queuelocker.unlock();
             continue;
         }
+        // 从请求队列中取出一个请求，然后释放锁
         T *request = m_workqueue.front();
-        m_workqueue.pop_front();
+        m_workqueue.pop_front();         
         m_queuelocker.unlock();
+        // 判断请求是否为空
         if (!request)
             continue;
-        if (1 == m_actor_model)
+        // Reactor模型
+        if (m_actor_model == 1)
         {
-            if (0 == request->m_state)
-            {
-                if (request->read_once())
+            // 请求状态为0，执行读操作
+            if (request->m_state == 0)
+            {   
+                if (request->read_once())   // 读取请求成功
                 {
                     request->improv = 1;
-                    connectionRAII mysqlcon(&request->mysql, m_connPool);
-                    request->process();
-                }
+                    connectionRAII mysqlcon(&request->mysql, m_connPool);   // 创建一个connectionRAII对象连接数据库
+                    request->process();     // 处理请求
+                }   
+                // 读取请求失败
                 else
                 {
                     request->improv = 1;
                     request->timer_flag = 1;
                 }
             }
+            // 请求状态不为0，执行写操作
             else
             {
                 if (request->write())
@@ -159,6 +165,7 @@ void threadpool<T>::run()
                 }
             }
         }
+        // Proactor模型
         else
         {
             connectionRAII mysqlcon(&request->mysql, m_connPool);
