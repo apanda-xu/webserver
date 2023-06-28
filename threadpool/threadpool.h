@@ -38,18 +38,23 @@ private:
 template <typename T>
 threadpool<T>::threadpool( int actor_model, connection_pool *connPool, int thread_number, int max_requests) : m_actor_model(actor_model),m_thread_number(thread_number), m_max_requests(max_requests), m_threads(NULL),m_connPool(connPool)
 {
+    // 如果线程的数量或最大请求数量小于等于0，则抛出异常
     if (thread_number <= 0 || max_requests <= 0)
         throw std::exception();
+    // 描述线程的数组
     m_threads = new pthread_t[m_thread_number];
     if (!m_threads)
         throw std::exception();
+    // 创建线程
     for (int i = 0; i < thread_number; ++i)
-    {
+    {   
+        // 创建线程并检查是否成功
         if (pthread_create(m_threads + i, NULL, worker, this) != 0)
         {
             delete[] m_threads;
             throw std::exception();
         }
+        // 分离线程并检查是否成功
         if (pthread_detach(m_threads[i]))
         {
             delete[] m_threads;
@@ -58,28 +63,31 @@ threadpool<T>::threadpool( int actor_model, connection_pool *connPool, int threa
     }
 }
 
+// 析构函数，释放线程池
 template <typename T>
 threadpool<T>::~threadpool()
 {
     delete[] m_threads;
 }
 
+// 成员函数：添加请求
 template <typename T>
 bool threadpool<T>::append(T *request, int state)
-{
-    m_queuelocker.lock();
+{   
+    m_queuelocker.lock();           // 获取锁
     if (m_workqueue.size() >= m_max_requests)
-    {
+    {   
         m_queuelocker.unlock();
-        return false;
+        return false;               // 如果达到最大请求数量，释放锁，返回false
     }
     request->m_state = state;
-    m_workqueue.push_back(request);
-    m_queuelocker.unlock();
-    m_queuestat.post();
+    m_workqueue.push_back(request); // 添加请求
+    m_queuelocker.unlock();         // 释放锁
+    m_queuestat.post();             // 增加信号量的值，表示资源已经释放，其他等待的线程可以继续执行
     return true;
 }
 
+// 成员函数：添加请求
 template <typename T>
 bool threadpool<T>::append_p(T *request)
 {
@@ -95,14 +103,16 @@ bool threadpool<T>::append_p(T *request)
     return true;
 }
 
+// 成员函数：工作线程
 template <typename T>
 void *threadpool<T>::worker(void *arg)
 {
-    threadpool *pool = (threadpool *)arg;
+    threadpool *pool = (threadpool *)arg;   // 参数是线程池，需要强制类型转换
     pool->run();
     return pool;
 }
 
+// 成员函数：
 template <typename T>
 void threadpool<T>::run()
 {
