@@ -381,13 +381,13 @@ void WebServer::eventLoop()
 
     while (!stop_server)
     {
-        int number = epoll_wait(m_epollfd, events, MAX_EVENT_NUMBER, -1);
+        int number = epoll_wait(m_epollfd, events, MAX_EVENT_NUMBER, -1);   // 等待事件的发生，返回实际发生的事件数量
         if (number < 0 && errno != EINTR)
         {
             LOG_ERROR("%s", "epoll failure");
             break;
         }
-
+        // 处理每个事件
         for (int i = 0; i < number; i++)
         {
             int sockfd = events[i].data.fd;
