@@ -559,43 +559,141 @@
 //     return 0;
 // }
 
-#include <iostream>
-#include <pthread.h>
+// #include <iostream>
+// #include <pthread.h>
 
-// 线程函数，打印消息
-void* printMessage(void* arg) {
-    std::string message = static_cast<char*>(arg);
-    std::cout << "Thread ID: " << pthread_self() << " Message: " << message << std::endl;
-    pthread_exit(NULL);
+// // 线程函数，打印消息
+// void* printMessage(void* arg) {
+//     std::string message = static_cast<char*>(arg);
+//     std::cout << "Thread ID: " << pthread_self() << " Message: " << message << std::endl;
+//     pthread_exit(NULL);
+// }
+
+// int main() {
+//     pthread_t thread1, thread2;
+//     const char* message1 = "Hello from Thread 1";
+//     const char* message2 = "Hello from Thread 2";
+
+//     // 创建线程1，并执行线程函数printMessage
+//     if (pthread_create(&thread1, NULL, printMessage, (void*)message1) != 0) {
+//         std::cerr << "Failed to create thread 1" << std::endl;
+//         return 1;
+//     }
+
+//     // 创建线程2，并执行线程函数printMessage
+//     if (pthread_create(&thread2, NULL, printMessage, (void*)message2) != 0) {
+//         std::cerr << "Failed to create thread 2" << std::endl;
+//         return 1;
+//     }
+
+//     // 等待线程1和线程2执行完成
+//     if (pthread_join(thread1, NULL) != 0) {
+//         std::cerr << "Failed to join thread 1" << std::endl;
+//         return 1;
+//     }
+
+//     if (pthread_join(thread2, NULL) != 0) {
+//         std::cerr << "Failed to join thread 2" << std::endl;
+//         return 1;
+//     }
+
+//     return 0;
+// }
+
+// #include<iostream>
+// using namespace std;
+
+// class Test
+// {
+// public:
+//     Test(){}
+//     // virtual ~Test() {
+//     //     cout << "调用析构函数"  << endl;
+//     // }
+//     virtual ~Test() = 0;
+// };
+
+// // Test::~Test() {
+// //     cout << "调用析构函数" << endl;
+// // }
+
+
+// int main() {
+//     Test *test = new Test();
+//     delete test; 
+// }
+
+// #include <iostream>
+// #include <pthread.h>
+
+// // 线程函数，打印消息
+// void printMessage(void* arg) {
+//     std::string message = static_cast<char*>(arg);
+//     std::cout << "Thread ID: " << pthread_self() << " Message: " << message << std::endl;
+//     pthread_exit(NULL);
+// }
+
+// void (*fun)(void* arg) = printMessage;
+// int main() {
+//     pthread_t thread1, thread2;
+//     const char* message1 = "Hello from Thread 1";
+//     const char* message2 = "Hello from Thread 2";
+
+//     // 创建线程1，并执行线程函数printMessage
+//     if (pthread_create(&thread1, NULL, fun, (void*)message1) != 0) {
+//         std::cerr << "Failed to create thread 1" << std::endl;
+//         return 1;
+//     }
+//     pthread_join(thread1, NULL);
+// }
+
+// #include<iostream>
+
+// class Singleton {
+// private:
+//     static Singleton instance;
+//     // 私有构造函数
+//     Singleton() {}
+
+// public:
+//     // 全局访问点，用于获取单例对象
+//     static Singleton* getInstance() {
+//         return &instance;
+//     }
+// };
+
+// // 静态成员初始化
+// Singleton Singleton::instance;
+
+// int main() {
+//     Singleton *instance1 = Singleton::getInstance();
+//     Singleton *instance2 = Singleton::getInstance();
+//     if(instance1 == instance2) {
+//         std::cout << "same" << std::endl;
+//     }
+// }
+
+#include<iostream>
+#include<thread>
+#include<condition_variable>
+#include<mutex>
+
+bool flag = false;
+std::condition_variable cv;
+std::mutex mtx;
+
+void fun() {
+    std::unique_lock<std::mutex> lock(mtx);
+    // while(!flag) {
+    //     cv.wait(lock);
+    // }
+    cv.wait(lock, [](){return flag;});
+    std::cout << "hello" << std::endl;
 }
 
 int main() {
-    pthread_t thread1, thread2;
-    const char* message1 = "Hello from Thread 1";
-    const char* message2 = "Hello from Thread 2";
-
-    // 创建线程1，并执行线程函数printMessage
-    if (pthread_create(&thread1, NULL, printMessage, (void*)message1) != 0) {
-        std::cerr << "Failed to create thread 1" << std::endl;
-        return 1;
-    }
-
-    // 创建线程2，并执行线程函数printMessage
-    if (pthread_create(&thread2, NULL, printMessage, (void*)message2) != 0) {
-        std::cerr << "Failed to create thread 2" << std::endl;
-        return 1;
-    }
-
-    // 等待线程1和线程2执行完成
-    if (pthread_join(thread1, NULL) != 0) {
-        std::cerr << "Failed to join thread 1" << std::endl;
-        return 1;
-    }
-
-    if (pthread_join(thread2, NULL) != 0) {
-        std::cerr << "Failed to join thread 2" << std::endl;
-        return 1;
-    }
-
-    return 0;
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    // flag = true;
+    std::thread t1(fun);
+    t1.join();
 }
