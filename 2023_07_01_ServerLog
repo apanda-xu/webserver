@@ -1,0 +1,37 @@
+2023-07-01 00:03:32.885951 [info]: deal with the client(192.168.176.1)
+2023-07-01 00:03:32.886110 [info]: adjust timer once
+2023-07-01 00:03:32.886209 [info]: GET / HTTP/1.1
+2023-07-01 00:03:32.886242 [info]: Host: 10.126.153.190:9006
+2023-07-01 00:03:32.886261 [info]: Connection: keep-alive
+2023-07-01 00:03:32.886272 [info]: DNT: 1
+2023-07-01 00:03:32.886283 [info]: oop!unknow header: DNT: 1
+2023-07-01 00:03:32.886293 [info]: Upgrade-Insecure-Requests: 1
+2023-07-01 00:03:32.886302 [info]: oop!unknow header: Upgrade-Insecure-Requests: 1
+2023-07-01 00:03:32.886328 [info]: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
+2023-07-01 00:03:32.886344 [info]: oop!unknow header: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
+2023-07-01 00:03:32.886354 [info]: Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+2023-07-01 00:03:32.886363 [info]: oop!unknow header: Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+2023-07-01 00:03:32.886373 [info]: Accept-Encoding: gzip, deflate
+2023-07-01 00:03:32.886382 [info]: oop!unknow header: Accept-Encoding: gzip, deflate
+2023-07-01 00:03:32.886391 [info]: Accept-Language: zh-CN,zh;q=0.9
+2023-07-01 00:03:32.886399 [info]: oop!unknow header: Accept-Language: zh-CN,zh;q=0.9
+2023-07-01 00:03:32.886407 [info]: 
+2023-07-01 00:03:32.886448 [info]: request:HTTP/1.1 200 OK
+
+2023-07-01 00:03:32.886464 [info]: request:HTTP/1.1 200 OK
+Content-Length:586
+
+2023-07-01 00:03:32.886472 [info]: request:HTTP/1.1 200 OK
+Content-Length:586
+Connection:keep-alive
+
+2023-07-01 00:03:32.886481 [info]: request:HTTP/1.1 200 OK
+Content-Length:586
+Connection:keep-alive
+
+
+2023-07-01 00:03:32.887561 [info]: send data to the client(192.168.176.1)
+2023-07-01 00:03:32.887626 [info]: adjust timer once
+2023-07-01 00:03:34.018065 [info]: timer tick
+2023-07-01 00:03:34.308462 [info]: close fd 17
+2023-07-01 00:03:34.308782 [info]: close fd 16
