@@ -673,27 +673,83 @@
 //     }
 // }
 
+// #include<iostream>
+// #include<thread>
+// #include<condition_variable>
+// #include<mutex>
+
+// bool flag = false;
+// std::condition_variable cv;
+// std::mutex mtx;
+
+// void fun() {
+//     std::unique_lock<std::mutex> lock(mtx);
+//     // while(!flag) {
+//     //     cv.wait(lock);
+//     // }
+//     cv.wait(lock, [](){return flag;});
+//     std::cout << "hello" << std::endl;
+// }
+
+// int main() {
+//     // std::this_thread::sleep_for(std::chrono::seconds(2));
+//     // flag = true;
+//     std::thread t1(fun);
+//     t1.join();
+// }
+
+// #include<iostream>
+// int main() {
+//     char a[] = {'c','+','+'};
+//     char b[] = {'c','+','+', '\0'};
+//     char c[] = "c++";
+//     char d[] = "c++\0";
+//     printf("%s\n", a);
+//     printf("%s\n", b);
+//     printf("%s\n", c);
+//     printf("%s\n", d);
+// }
+
 #include<iostream>
-#include<thread>
-#include<condition_variable>
 #include<mutex>
-
-bool flag = false;
-std::condition_variable cv;
+#include<thread>
+#include<./locker.h>
 std::mutex mtx;
+sem mysem;
 
-void fun() {
+void show(int num) {
     std::unique_lock<std::mutex> lock(mtx);
-    // while(!flag) {
-    //     cv.wait(lock);
-    // }
-    cv.wait(lock, [](){return flag;});
-    std::cout << "hello" << std::endl;
+    std::cout << "this is " << num << std::endl; 
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::cout << num << " has finished, unlock" << std::endl;
 }
 
+void out(int num) {
+    mysem.wait();
+    std::cout << "this is " << num << std::endl; 
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::cout << num << " has finished" << std::endl;
+    mysem.post();
+}
+
+// int main() {
+//     std::thread t1(show, 1);
+//     std::thread t2(show, 2);
+//     std::thread t3(show, 3);
+//     std::thread t4(show, 4);
+//     t1.join();
+//     t2.join();
+//     t3.join();
+//     t4.join();
+// }
+
 int main() {
-    // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // flag = true;
-    std::thread t1(fun);
+    std::thread t1(show, 1);
+    std::thread t2(show, 2);
+    std::thread t3(show, 3);
+    std::thread t4(show, 4);
     t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
 }

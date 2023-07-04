@@ -103,55 +103,56 @@ void WebServer::thread_pool()
 void WebServer::eventListen()
 {
     // 网络编程基础步骤
-    m_listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    m_listenfd = socket(PF_INET, SOCK_STREAM, 0);   // 服务端创建套接字用于监听
     assert(m_listenfd >= 0);
 
     // 优雅关闭连接
     if (0 == m_OPT_LINGER)
-    {
-        struct linger tmp = {0, 1};
+    {   // 关闭连接时立即关闭，不等待未发送完的数据，默认情况下即使有数据未发送完毕，调用 close 函数也会立即关闭连接
+        struct linger tmp = {0, 1}; // 第一个参数为0不启用，1启用；第二个参数是延长等待的时间
         setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     }
     else if (1 == m_OPT_LINGER)
     {
+        // 关闭连接时等待所有未发送完的数据发送完毕，最多等待1秒钟
         struct linger tmp = {1, 1};
         setsockopt(m_listenfd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     }
 
     int ret = 0;
     struct sockaddr_in address;
-    bzero(&address, sizeof(address));
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = htonl(INADDR_ANY);
-    address.sin_port = htons(m_port);
+    bzero(&address, sizeof(address));   // 变量内存清零
+    address.sin_family = AF_INET;       // ipv4
+    address.sin_addr.s_addr = htonl(INADDR_ANY);    // INADDR_ANY表示可以接收任意ip地址的连接；htonl将主机字节序转换成网络字节序
+    address.sin_port = htons(m_port);   // 设置端口
 
     int flag = 1;
-    setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
-    ret = bind(m_listenfd, (struct sockaddr *)&address, sizeof(address));
+    setsockopt(m_listenfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));  
+    ret = bind(m_listenfd, (struct sockaddr *)&address, sizeof(address));   // 将套接字和地址绑定
     assert(ret >= 0);
-    ret = listen(m_listenfd, 5);
+    ret = listen(m_listenfd, 5);    
     assert(ret >= 0);
 
-    utils.init(TIMESLOT);
+    utils.init(TIMESLOT);   // 初始化时间间隔
 
     // epoll创建内核事件表
-    epoll_event events[MAX_EVENT_NUMBER];
-    m_epollfd = epoll_create(5);
+    epoll_event events[MAX_EVENT_NUMBER];   // 用于存储从epoll实例获取的事件信息
+    m_epollfd = epoll_create(5);            // 创建一个epoll对象
     assert(m_epollfd != -1);
 
-    utils.addfd(m_epollfd, m_listenfd, false, m_LISTENTrigmode);
+    utils.addfd(m_epollfd, m_listenfd, false, m_LISTENTrigmode);    // 将监听套接字加入epoll实例m_epollfd中进行事件监听，false表示不启用 EPOLLONESHOT 事件，m_LISTENTrigmode决定是否启用边缘触发模式
     http_conn::m_epollfd = m_epollfd;
 
-    ret = socketpair(PF_UNIX, SOCK_STREAM, 0, m_pipefd);
+    ret = socketpair(PF_UNIX, SOCK_STREAM, 0, m_pipefd);// 创建一对相互连接的全双工的套接字
     assert(ret != -1);
-    utils.setnonblocking(m_pipefd[1]);
-    utils.addfd(m_epollfd, m_pipefd[0], false, 0);
+    utils.setnonblocking(m_pipefd[1]);                  // 设置m_pipefd[1]为非阻塞模式
+    utils.addfd(m_epollfd, m_pipefd[0], false, 0);      // 将m_pipefd[0]加入m_epllfd指向的epoll实例中
 
-    utils.addsig(SIGPIPE, SIG_IGN);
-    utils.addsig(SIGALRM, utils.sig_handler, false);
-    utils.addsig(SIGTERM, utils.sig_handler, false);
+    utils.addsig(SIGPIPE, SIG_IGN);                     // 将对 SIGPIPE 信号的处理设置为 SIG_IGN，即忽略该信号。这是为了避免在写入已关闭的管道时触发 SIGPIPE 信号导致程序终止。
+    utils.addsig(SIGALRM, utils.sig_handler, false);    // 注册了对 SIGALRM 信号的处理函数 utils.sig_handler。第三个参数 false 表示该信号不启用 EPOLLONESHOT 选项，即当信号被处理后仍然保持有效。
+    utils.addsig(SIGTERM, utils.sig_handler, false);    // 注册了对 SIGTERM 信号的处理函数 utils.sig_handler，同样不启用 EPOLLONESHOT 选项。
 
-    alarm(TIMESLOT);
+    alarm(TIMESLOT);    // 在 TIMESLOT 秒后发送 SIGALRM 信号给当前进程。该信号的默认行为是终止进程，但是根据前面的代码注册了对 SIGALRM 信号的处理函数 utils.sig_handler。因此，当定时器到期时，操作系统将向进程发送 SIGALRM 信号，并调用注册的信号处理函数 utils.sig_handler 来处理该信号。
 
     // 工具类,信号和描述符基础操作
     Utils::u_pipefd = m_pipefd;
@@ -166,13 +167,13 @@ void WebServer::timer(int connfd, struct sockaddr_in client_address)
     // 创建定时器，设置回调函数和超时时间，绑定用户数据，将定时器添加到链表中
     users_timer[connfd].address = client_address;
     users_timer[connfd].sockfd = connfd;
-    util_timer *timer = new util_timer;
-    timer->user_data = &users_timer[connfd];
-    timer->cb_func = cb_func;
-    time_t cur = time(NULL);
-    timer->expire = cur + 3 * TIMESLOT;
-    users_timer[connfd].timer = timer;
-    utils.m_timer_lst.add_timer(timer);
+    util_timer *timer = new util_timer;         // 创建定时器
+    timer->user_data = &users_timer[connfd];    // 将定时器与对应的用户数据关联起来
+    timer->cb_func = cb_func;                   // 设置定时器回调函数
+    time_t cur = time(NULL);                    // 获取当前时间
+    timer->expire = cur + 3 * TIMESLOT;         // 设置定时器超时时间
+    users_timer[connfd].timer = timer;          // 将定时器与客户端连接的数据关联起来，以便在定时器到期时能够获取到相应的数据
+    utils.m_timer_lst.add_timer(timer);         // 将定时器 timer 添加到定时器链表中，即将其插入到合适的位置
 }
 
 // 若有数据传输，则将定时器往后延迟3个单位
@@ -185,18 +186,18 @@ void WebServer::adjust_timer(util_timer *timer)
 
     LOG_INFO("%s", "adjust timer once");
 }
-
+// 执行定时器超时操作
 void WebServer::deal_timer(util_timer *timer, int sockfd)
 {
-    timer->cb_func(&users_timer[sockfd]);
+    timer->cb_func(&users_timer[sockfd]);   // 执行回调函数，从epoll中删除指定文件描述符，关闭文件描述符
     if (timer)
     {
-        utils.m_timer_lst.del_timer(timer);
+        utils.m_timer_lst.del_timer(timer); // 如果time对象存在，将该定时器从链表中移除
     }
 
     LOG_INFO("close fd %d", users_timer[sockfd].sockfd);
 }
-
+// 处理客户端数据
 bool WebServer::dealclientdata()
 {
     struct sockaddr_in client_address;

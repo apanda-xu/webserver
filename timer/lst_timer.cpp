@@ -153,9 +153,9 @@ void Utils::init(int timeslot)
 //对文件描述符设置非阻塞
 int Utils::setnonblocking(int fd)
 {
-    int old_option = fcntl(fd, F_GETFL);
-    int new_option = old_option | O_NONBLOCK;
-    fcntl(fd, F_SETFL, new_option);
+    int old_option = fcntl(fd, F_GETFL);        // 获取文件描述符fd的当前属性
+    int new_option = old_option | O_NONBLOCK;   // 按位与，添加O_NONBLOCK属性
+    fcntl(fd, F_SETFL, new_option);             // 将新属性传回文件描述符 
     return old_option;
 }
 
@@ -217,8 +217,8 @@ int Utils::u_epollfd = 0;
 class Utils;
 void cb_func(client_data *user_data)
 {
-    epoll_ctl(Utils::u_epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);
-    assert(user_data);
-    close(user_data->sockfd);
-    http_conn::m_user_count--;
+    epoll_ctl(Utils::u_epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);   // 从epoll实例中删除指定的文件描述符
+    assert(user_data);  
+    close(user_data->sockfd);   // 关闭文件描述符
+    http_conn::m_user_count--;  // 连接数减一
 }
