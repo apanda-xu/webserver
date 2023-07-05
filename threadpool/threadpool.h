@@ -135,7 +135,7 @@ void threadpool<T>::run()
         // Reactor模型
         if (m_actor_model == 1)
         {
-            // 请求状态为0，执行读操作
+            // 执行读操作
             if (request->m_state == 0)
             {   
                 if (request->read_once())   // 读取请求成功
@@ -151,10 +151,10 @@ void threadpool<T>::run()
                     request->timer_flag = 1;
                 }
             }
-            // 请求状态不为0，执行写操作
+            // 执行写操作
             else
             {
-                if (request->write())
+                if (request->write())   // 写入成功
                 {
                     request->improv = 1;
                 }
@@ -165,7 +165,7 @@ void threadpool<T>::run()
                 }
             }
         }
-        // Proactor模型
+        // Proactor模型：主线程中已经完成了读操作，所以这里只需要处理数据，相当于模拟了一个快速的异步读操作    
         else
         {
             connectionRAII mysqlcon(&request->mysql, m_connPool);

@@ -202,26 +202,26 @@ bool WebServer::dealclientdata()
 {
     struct sockaddr_in client_address;
     socklen_t client_addrlength = sizeof(client_address);
-    if (0 == m_LISTENTrigmode)
+    if (0 == m_LISTENTrigmode)  // 水平触发模式
     {
-        int connfd = accept(m_listenfd, (struct sockaddr *)&client_address, &client_addrlength);
+        int connfd = accept(m_listenfd, (struct sockaddr *)&client_address, &client_addrlength);    // 接收客户端连接
         if (connfd < 0)
         {
             LOG_ERROR("%s:errno is:%d", "accept error", errno);
             return false;
         }
-        if (http_conn::m_user_count >= MAX_FD)
+        if (http_conn::m_user_count >= MAX_FD)  // 当前连接的客户端数量超过最大值
         {
             utils.show_error(connfd, "Internal server busy");
             LOG_ERROR("%s", "Internal server busy");
             return false;
         }
-        timer(connfd, client_address);
+        timer(connfd, client_address);          // 给连接设置定时器
     }
 
     else
-    {
-        while (1)
+    {   // 边缘触发模式                 
+        while (1)   // 使用循环不断接收客户端请求
         {
             int connfd = accept(m_listenfd, (struct sockaddr *)&client_address, &client_addrlength);
             if (connfd < 0)
@@ -241,13 +241,13 @@ bool WebServer::dealclientdata()
     }
     return true;
 }
-
+// 信号处理
 bool WebServer::dealwithsignal(bool &timeout, bool &stop_server)
 {
     int ret = 0;
     int sig;
     char signals[1024];
-    ret = recv(m_pipefd[0], signals, sizeof(signals), 0);
+    ret = recv(m_pipefd[0], signals, sizeof(signals), 0);           // 从管道读数据，ret表示读取到的字节数
     if (ret == -1)
     {
         return false;
@@ -258,16 +258,16 @@ bool WebServer::dealwithsignal(bool &timeout, bool &stop_server)
     }
     else
     {
-        for (int i = 0; i < ret; ++i)
+        for (int i = 0; i < ret; ++i)   // 遍历所读数据
         {
             switch (signals[i])
             {
-            case SIGALRM:
+            case SIGALRM:   // 超时
             {
                 timeout = true;
                 break;
             }
-            case SIGTERM:
+            case SIGTERM:   // 关闭服务
             {
                 stop_server = true;
                 break;
@@ -277,7 +277,7 @@ bool WebServer::dealwithsignal(bool &timeout, bool &stop_server)
     }
     return true;
 }
-
+// 处理读操作
 void WebServer::dealwithread(int sockfd)
 {
     util_timer *timer = users_timer[sockfd].timer;
@@ -287,17 +287,17 @@ void WebServer::dealwithread(int sockfd)
     {
         if (timer)
         {
-            adjust_timer(timer);
+            adjust_timer(timer);    // 调整连接的定时器
         }
 
         // 若监测到读事件，将该事件放入请求队列
         m_pool->append(users + sockfd, 0);
-
-        while (true)
+    
+        while (true)    // 主线程通过轮询的方式等待线程读完
         {
             if (1 == users[sockfd].improv)
             {
-                if (1 == users[sockfd].timer_flag)
+                if (1 == users[sockfd].timer_flag)  // time_flag表示读失败，删除定时器，关闭连接，将timer_flag和improv重新置为1
                 {
                     deal_timer(timer, sockfd);
                     users[sockfd].timer_flag = 0;
@@ -310,25 +310,25 @@ void WebServer::dealwithread(int sockfd)
     else
     {
         // proactor
-        if (users[sockfd].read_once())
+        if (users[sockfd].read_once())  // 主线程执行读操作（同步），模拟异步
         {
-            LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
+            LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr)); // 打印客户端地址
 
             // 若监测到读事件，将该事件放入请求队列
             m_pool->append_p(users + sockfd);
 
-            if (timer)
+            if (timer)                  // 是否需要放到 m_pool->append_p(users + sockfd); 上面？
             {
-                adjust_timer(timer);
+                adjust_timer(timer);    // 调整连接的定时器
             }
         }
         else
         {
-            deal_timer(timer, sockfd);
+            deal_timer(timer, sockfd);  // 读失败
         }
     }
 }
-
+// 处理写操作
 void WebServer::dealwithwrite(int sockfd)
 {
     util_timer *timer = users_timer[sockfd].timer;
@@ -337,12 +337,12 @@ void WebServer::dealwithwrite(int sockfd)
     {
         if (timer)
         {
-            adjust_timer(timer);
+            adjust_timer(timer);    // 调整连接的定时器
         }
 
-        m_pool->append(users + sockfd, 1);
+        m_pool->append(users + sockfd, 1);  // 加入请求队列
 
-        while (true)
+        while (true)    // 主线程轮询等待线程完成写操作
         {
             if (1 == users[sockfd].improv)
             {
@@ -374,7 +374,7 @@ void WebServer::dealwithwrite(int sockfd)
         }
     }
 }
-
+// 主循环
 void WebServer::eventLoop()
 {
     bool timeout = false;
